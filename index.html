@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Super Mario Platformer</title>
+    <style>
+      /* Reset and base styles - keep existing styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #222;
+        background-image: linear-gradient(to bottom, #1a1a2e, #16213e);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: white;
+        padding: 20px;
+      }
+
+      /* Game title */
+      .game-title {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .game-title h1 {
+        font-size: 3rem;
+        color: #ff7e5f;
+        text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000,
+          -1px 1px 0 #000;
+        letter-spacing: 2px;
+      }
+
+      /* Level indicator */
+      .level-indicator {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        color: #f39c12;
+        text-shadow: 2px 2px 0 #000;
+      }
+
+      /* Game container and canvas */
+      .game-container {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+        border: 4px solid #333;
+      }
+
+      canvas {
+        display: block;
+        background-color: #8ca9e0;
+      }
+
+      /* HUD display */
+      .hud {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 8px 16px;
+        border-radius: 20px;
+        display: flex;
+        gap: 20px;
+        font-weight: bold;
+        font-size: 18px;
+      }
+
+      .hud .coin-counter::before {
+        content: "🪙";
+        margin-right: 5px;
+      }
+
+      .hud .lives-counter::before {
+        content: "❤️";
+        margin-right: 5px;
+      }
+
+      /* Controls and info panel */
+      .controls-panel {
+        background-color: #e74c3c;
+        padding: 15px;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .controls-info {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 10px;
+      }
+
+      .control-key {
+        background-color: #333;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-weight: bold;
+        margin: 0 5px;
+        display: inline-block;
+      }
+
+      /* Buttons */
+      .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      button {
+        background-color: #f1c40f;
+        border: none;
+        color: #7d4e24;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 0 #d35400;
+      }
+
+      button:hover {
+        background-color: #f39c12;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 #d35400;
+      }
+
+      button:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #d35400;
+      }
+
+      #fullscreenButton {
+        background-color: #3498db;
+        box-shadow: 0 4px 0 #2980b9;
+      }
+
+      #fullscreenButton:hover {
+        background-color: #2980b9;
+        box-shadow: 0 6px 0 #2471a3;
+      }
+
+      #fullscreenButton:active {
+        box-shadow: 0 2px 0 #2471a3;
+      }
+
+      /* Mobile controls with improved touch areas */
+      .mobile-controls {
+        display: none;
+        margin-top: 15px;
+      }
+
+      .mobile-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .direction-buttons {
+        display: flex;
+        gap: 15px;
+      }
+
+      .mobile-button {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        user-select: none;
+        touch-action: manipulation; /* Improve touch response */
+      }
+
+      .jump-button {
+        width: 80px;
+        height: 80px;
+        font-size: 32px;
+        background-color: rgba(241, 196, 15, 0.3);
+        border-color: rgba(241, 196, 15, 0.6);
+      }
+
+      /* Game overlays - ensure they cover the game area only */
+      .game-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        z-index: 100;
+      }
+
+      .overlay-title {
+        font-size: 36px;
+        margin-bottom: 20px;
+        color: #ff7e5f;
+        text-shadow: 2px 2px 0 #000;
+      }
+
+      .overlay-text {
+        font-size: 24px;
+        margin-bottom: 30px;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .mobile-controls {
+          display: block;
+        }
+
+        .game-container {
+          max-width: 100%;
+          max-height: 60vh;
+        }
+
+        canvas {
+          max-width: 100%;
+          height: auto;
+        }
+      }
+
+      /* Footer */
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-title">
+      <h1>SUPER PLATFORMER</h1>
+      <div class="level-indicator">
+        Level: <span id="levelIndicator">1</span>
+      </div>
+    </div>
+
+    <div class="game-container">
+      <canvas id="gameCanvas"></canvas>
+      <div class="hud">
+        <div class="coin-counter"><span id="coinCount">0</span></div>
+        <div class="lives-counter"><span id="livesCount">3</span></div>
+      </div>
+    </div>
+
+    <div class="controls-panel">
+      <div class="controls-info">
+        <div>
+          <span class="control-key">←</span>
+          <span class="control-key">→</span>
+          Move
+        </div>
+        <div>
+          <span class="control-key">Space</span>
+          Jump
+        </div>
+        <div>
+          <span class="control-key">P</span>
+          Pause
+        </div>
+      </div>
+
+      <div class="button-container">
+        <button id="restartButton">Restart Game</button>
+        <button id="fullscreenButton">Fullscreen</button>
+      </div>
+
+      <div class="mobile-controls">
+        <div class="mobile-buttons">
+          <div class="direction-buttons">
+            <div class="mobile-button" id="leftButton">◀</div>
+            <div class="mobile-button" id="rightButton">▶</div>
+          </div>
+          <div class="mobile-button jump-button" id="jumpButton">↑</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Created for Graphics Course Project • 2025</p>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+      // Basic fullscreen functionality
+      document
+        .getElementById("fullscreenButton")
+        .addEventListener("click", () => {
+          const gameContainer = document.querySelector(".game-container");
+          if (!document.fullscreenElement) {
+            if (gameContainer.requestFullscreen) {
+              gameContainer.requestFullscreen().catch((err) => {
+                console.log(
+                  `Error attempting to enable full-screen mode: ${err.message}`
+                );
+              });
+            }
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            }
+          }
+        });
+
+      // Track level changes to update UI
+      function updateLevelIndicator(level) {
+        document.getElementById("levelIndicator").textContent = level;
+      }
+
+      // Mobile control event handlers with improved touch handling
+      const mobileControls = {
+        left: document.getElementById("leftButton"),
+        right: document.getElementById("rightButton"),
+        jump: document.getElementById("jumpButton"),
+      };
+
+      // Mobile control event simulation
+      if (mobileControls.left) {
+        ["touchstart", "mousedown"].forEach((event) => {
+          mobileControls.left.addEventListener(event, (e) => {
+            e.preventDefault();
+            simulateKeyDown("ArrowLeft");
+          });
+        });
+
+        ["touchend", "mouseup", "mouseleave"].forEach((event) => {
+          mobileControls.left.addEventListener(event, (e) => {
+            e.preventDefault();
+            simulateKeyUp("ArrowLeft");
+          });
+        });
+      }
+
+      if (mobileControls.right) {
+        ["touchstart", "mousedown"].forEach((event) => {
+          mobileControls.right.addEventListener(event, (e) => {
+            e.preventDefault();
+            simulateKeyDown("ArrowRight");
+          });
+        });
+
+        ["touchend", "mouseup", "mouseleave"].forEach((event) => {
+          mobileControls.right.addEventListener(event, (e) => {
+            e.preventDefault();
+            simulateKeyUp("ArrowRight");
+          });
+        });
+      }
+
+      if (mobileControls.jump) {
+        ["touchstart", "mousedown"].forEach((event) => {
+          mobileControls.jump.addEventListener(event, (e) => {
+            e.preventDefault();
+            simulateKeyDown("Space");
+          });
+        });
+
+        ["touchend", "mouseup", "mouseleave"].forEach((event) => {
+          mobileControls.jump.addEventListener(event, (e) => {
+            e.preventDefault();
+            simulateKeyUp("Space");
+          });
+        });
+      }
+
+      function simulateKeyDown(key) {
+        const event = new KeyboardEvent("keydown", { key });
+        document.dispatchEvent(event);
+      }
+
+      function simulateKeyUp(key) {
+        const event = new KeyboardEvent("keyup", { key });
+        document.dispatchEvent(event);
+      }
+    </script>
+  </body>
+</html>
