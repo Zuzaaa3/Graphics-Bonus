@@ -2,10 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Super Mario Platformer</title>
+    <!-- Add this line to prevent iOS from handling taps with delays -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <style>
-      /* Reset and base styles - keep existing styles */
       * {
         margin: 0;
         padding: 0;
@@ -162,6 +166,12 @@
       .mobile-controls {
         display: none;
         margin-top: 15px;
+        -webkit-touch-callout: none; /* Prevent callout on long-press */
+        -webkit-user-select: none; /* Prevent text selection */
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
 
       .mobile-buttons {
@@ -186,7 +196,8 @@
         justify-content: center;
         font-size: 24px;
         user-select: none;
-        touch-action: manipulation; /* Improve touch response */
+        touch-action: none; /* Completely disable browser handling of touch */
+        -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
       }
 
       .jump-button {
@@ -300,10 +311,6 @@
       </div>
     </div>
 
-    <div class="footer">
-      <p>Created for Graphics Course Project • 2025</p>
-    </div>
-
     <script src="game.js"></script>
     <script>
       // Basic fullscreen functionality
@@ -331,6 +338,15 @@
         document.getElementById("levelIndicator").textContent = level;
       }
 
+      // Prevent default touch behavior for improved mobile controls
+      document.addEventListener(
+        "touchmove",
+        function (e) {
+          e.preventDefault();
+        },
+        { passive: false }
+      );
+
       // Mobile control event handlers with improved touch handling
       const mobileControls = {
         left: document.getElementById("leftButton"),
@@ -341,50 +357,80 @@
       // Mobile control event simulation
       if (mobileControls.left) {
         ["touchstart", "mousedown"].forEach((event) => {
-          mobileControls.left.addEventListener(event, (e) => {
-            e.preventDefault();
-            simulateKeyDown("ArrowLeft");
-          });
+          mobileControls.left.addEventListener(
+            event,
+            (e) => {
+              e.preventDefault();
+              simulateKeyDown("ArrowLeft");
+            },
+            { passive: false }
+          );
         });
 
-        ["touchend", "mouseup", "mouseleave"].forEach((event) => {
-          mobileControls.left.addEventListener(event, (e) => {
-            e.preventDefault();
-            simulateKeyUp("ArrowLeft");
-          });
-        });
+        ["touchend", "touchcancel", "mouseup", "mouseleave"].forEach(
+          (event) => {
+            mobileControls.left.addEventListener(
+              event,
+              (e) => {
+                e.preventDefault();
+                simulateKeyUp("ArrowLeft");
+              },
+              { passive: false }
+            );
+          }
+        );
       }
 
       if (mobileControls.right) {
         ["touchstart", "mousedown"].forEach((event) => {
-          mobileControls.right.addEventListener(event, (e) => {
-            e.preventDefault();
-            simulateKeyDown("ArrowRight");
-          });
+          mobileControls.right.addEventListener(
+            event,
+            (e) => {
+              e.preventDefault();
+              simulateKeyDown("ArrowRight");
+            },
+            { passive: false }
+          );
         });
 
-        ["touchend", "mouseup", "mouseleave"].forEach((event) => {
-          mobileControls.right.addEventListener(event, (e) => {
-            e.preventDefault();
-            simulateKeyUp("ArrowRight");
-          });
-        });
+        ["touchend", "touchcancel", "mouseup", "mouseleave"].forEach(
+          (event) => {
+            mobileControls.right.addEventListener(
+              event,
+              (e) => {
+                e.preventDefault();
+                simulateKeyUp("ArrowRight");
+              },
+              { passive: false }
+            );
+          }
+        );
       }
 
       if (mobileControls.jump) {
         ["touchstart", "mousedown"].forEach((event) => {
-          mobileControls.jump.addEventListener(event, (e) => {
-            e.preventDefault();
-            simulateKeyDown("Space");
-          });
+          mobileControls.jump.addEventListener(
+            event,
+            (e) => {
+              e.preventDefault();
+              simulateKeyDown("Space");
+            },
+            { passive: false }
+          );
         });
 
-        ["touchend", "mouseup", "mouseleave"].forEach((event) => {
-          mobileControls.jump.addEventListener(event, (e) => {
-            e.preventDefault();
-            simulateKeyUp("Space");
-          });
-        });
+        ["touchend", "touchcancel", "mouseup", "mouseleave"].forEach(
+          (event) => {
+            mobileControls.jump.addEventListener(
+              event,
+              (e) => {
+                e.preventDefault();
+                simulateKeyUp("Space");
+              },
+              { passive: false }
+            );
+          }
+        );
       }
 
       function simulateKeyDown(key) {
